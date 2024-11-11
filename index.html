@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Only Token (BOT)</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.6.9/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+    <h1>Buy Only Token (BOT)</h1>
+    <p>Buy BOT tokens using ETH!</p>
+
+    <input type="number" id="ethAmount" placeholder="Amount in ETH" />
+    <button onclick="buyTokens()">Buy Tokens</button>
+
+    <script>
+        // Replace with your contract's ABI and address
+        const contractAddress = '0x0f996aA083fFA58591BD269902a6191bF24c357D'; // Your contract address
+        const abi = [
+            // ABI to interact with the contract (just the buyTokens function here)
+            "function buyTokens() public payable"
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+
+        // Ensure MetaMask is installed
+        if (typeof window.ethereum !== 'undefined') {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            contract = new ethers.Contract(contractAddress, abi, signer);
+
+            // Request MetaMask connection
+            window.ethereum.request({ method: 'eth_requestAccounts' })
+                .then(() => console.log("Connected to MetaMask"))
+                .catch((error) => console.log("Error connecting to MetaMask: ", error));
+        } else {
+            alert("Please install MetaMask!");
+        }
+
+        // Function to buy tokens
+        async function buyTokens() {
+            const ethAmount = document.getElementById("ethAmount").value;
+
+            if (!ethAmount || ethAmount <= 0) {
+                alert("Please enter a valid ETH amount.");
+                return;
+            }
+
+            try {
+                // Convert ETH to Wei (1 ETH = 10^18 Wei)
+                const valueInWei = ethers.utils.parseEther(ethAmount);
+
+                // Call the contract's buyTokens function
+                const tx = await contract.buyTokens({ value: valueInWei });
+                console.log("Transaction Sent:", tx);
+
+                // Wait for the transaction to be mined
+                await tx.wait();
+                console.log("Transaction Mined:", tx);
+
+                alert("Tokens purchased successfully!");
+            } catch (error) {
+                console.error("Error buying tokens:", error);
+                alert("Transaction failed!");
+            }
+        }
+    </script>
+</body>
+</html>
